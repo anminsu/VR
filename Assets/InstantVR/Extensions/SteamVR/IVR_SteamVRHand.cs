@@ -46,11 +46,36 @@ namespace IVR {
 
             controllerInput = Controllers.GetController(0);
 
-            SteamVR_Utils.Event.Listen("device_connected", OnDeviceConnected);
+            //SteamVR_Utils.Event.Listen("device_connected", OnDeviceConnected);
+            SteamVR_Events.DeviceConnected.Listen(OnDeviceConnected);
 
             SetBodyRotation();
         }
 
+        private void OnDeviceConnected(int deviceId, bool isConnected)
+        {
+            int i = deviceId;
+            bool connected = isConnected;
+
+            SteamVR vr = SteamVR.instance;
+            bool isController = (vr.hmd.GetTrackedDeviceClass((uint)i) == Valve.VR.ETrackedDeviceClass.Controller);
+            if (isController && connected)
+            {
+                bool isLeftController = (i == SteamVR_Controller.GetDeviceIndex(SteamVR_Controller.DeviceRelation.Leftmost));
+                if (transform == ivr.leftHandTarget && isLeftController)
+                {
+                    controllerIndex = i;
+                    steamTracker.index = (SteamVR_TrackedObject.EIndex)controllerIndex;
+                }
+                else if (transform == ivr.rightHandTarget && !isLeftController)
+                {
+                    controllerIndex = i;
+                    steamTracker.index = (SteamVR_TrackedObject.EIndex)controllerIndex;
+                }
+            }
+        }
+
+        // This Format has been deprecated
         private void OnDeviceConnected(params object[] args) {
             int i = (int) args[0];
             bool connected = (bool) args[1];

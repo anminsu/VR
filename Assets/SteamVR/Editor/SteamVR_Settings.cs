@@ -26,7 +26,9 @@ public class SteamVR_Settings : EditorWindow
 	const string resizableWindow = "Resizable Window";
 	const string fullscreenMode = "D3D11 Fullscreen Mode";
 	const string visibleInBackground = "Visible In Background";
+#if (UNITY_5_4 || UNITY_5_3 || UNITY_5_2 || UNITY_5_1 || UNITY_5_0)
 	const string renderingPath = "Rendering Path";
+#endif
 	const string colorSpace = "Color Space";
 	const string gpuSkinning = "GPU Skinning";
 #if false // skyboxes are currently broken
@@ -43,7 +45,9 @@ public class SteamVR_Settings : EditorWindow
 	const bool recommended_ResizableWindow = true;
 	const D3D11FullscreenMode recommended_FullscreenMode = D3D11FullscreenMode.FullscreenWindow;
 	const bool recommended_VisibleInBackground = true;
+#if (UNITY_5_4 || UNITY_5_3 || UNITY_5_2 || UNITY_5_1 || UNITY_5_0)
 	const RenderingPath recommended_RenderPath = RenderingPath.Forward;
+#endif
 	const ColorSpace recommended_ColorSpace = ColorSpace.Linear;
 	const bool recommended_GpuSkinning = true;
 #if false
@@ -63,7 +67,11 @@ public class SteamVR_Settings : EditorWindow
 			(!EditorPrefs.HasKey(ignore + buildTarget) &&
 				EditorUserBuildSettings.activeBuildTarget != recommended_BuildTarget) ||
 			(!EditorPrefs.HasKey(ignore + showUnitySplashScreen) &&
+#if (UNITY_5_4 || UNITY_5_3 || UNITY_5_2 || UNITY_5_1 || UNITY_5_0)
 				PlayerSettings.showUnitySplashScreen != recommended_ShowUnitySplashScreen) ||
+#else
+				PlayerSettings.SplashScreen.show != recommended_ShowUnitySplashScreen) ||
+#endif
 			(!EditorPrefs.HasKey(ignore + defaultIsFullScreen) &&
 				PlayerSettings.defaultIsFullScreen != recommended_DefaultIsFullScreen) ||
 			(!EditorPrefs.HasKey(ignore + defaultScreenSize) &&
@@ -79,8 +87,10 @@ public class SteamVR_Settings : EditorWindow
 				PlayerSettings.d3d11FullscreenMode != recommended_FullscreenMode) ||
 			(!EditorPrefs.HasKey(ignore + visibleInBackground) &&
 				PlayerSettings.visibleInBackground != recommended_VisibleInBackground) ||
+#if (UNITY_5_4 || UNITY_5_3 || UNITY_5_2 || UNITY_5_1 || UNITY_5_0)
 			(!EditorPrefs.HasKey(ignore + renderingPath) &&
 				PlayerSettings.renderingPath != recommended_RenderPath) ||
+#endif
 			(!EditorPrefs.HasKey(ignore + colorSpace) &&
 				PlayerSettings.colorSpace != recommended_ColorSpace) ||
 			(!EditorPrefs.HasKey(ignore + gpuSkinning) &&
@@ -101,15 +111,17 @@ public class SteamVR_Settings : EditorWindow
 		// Switch to native OpenVR support.
 		var updated = false;
 
-        /* Please SteamVR! Do not do this!
-        if (!PlayerSettings.virtualRealitySupported)
-        {
-            PlayerSettings.virtualRealitySupported = true;
-            updated = true;
-        }
-        */
+		if (!PlayerSettings.virtualRealitySupported)
+		{
+			PlayerSettings.virtualRealitySupported = true;
+			updated = true;
+		}
 
-    var devices = UnityEditorInternal.VR.VREditor.GetVREnabledDevices(BuildTargetGroup.Standalone);
+#if (UNITY_5_4 || UNITY_5_3 || UNITY_5_2 || UNITY_5_1 || UNITY_5_0)
+		var devices = UnityEditorInternal.VR.VREditor.GetVREnabledDevices(BuildTargetGroup.Standalone);
+#else
+		var devices = UnityEditorInternal.VR.VREditor.GetVREnabledDevicesOnTargetGroup(BuildTargetGroup.Standalone);
+#endif
 		var hasOpenVR = false;
 		foreach (var device in devices)
 			if (device.ToLower() == "openvr")
@@ -130,7 +142,11 @@ public class SteamVR_Settings : EditorWindow
 				newDevices[devices.Length] = "OpenVR";
 				updated = true;
 			}
+#if (UNITY_5_4 || UNITY_5_3 || UNITY_5_2 || UNITY_5_1 || UNITY_5_0)
 			UnityEditorInternal.VR.VREditor.SetVREnabledDevices(BuildTargetGroup.Standalone, newDevices);
+#else
+			UnityEditorInternal.VR.VREditor.SetVREnabledDevicesOnTargetGroup(BuildTargetGroup.Standalone, newDevices);
+#endif
 		}
 
 		if (updated)
@@ -194,7 +210,11 @@ public class SteamVR_Settings : EditorWindow
 
 			if (GUILayout.Button(string.Format(useRecommended, recommended_BuildTarget)))
 			{
+#if (UNITY_5_5 || UNITY_5_4 || UNITY_5_3 || UNITY_5_2 || UNITY_5_1 || UNITY_5_0)
 				EditorUserBuildSettings.SwitchActiveBuildTarget(recommended_BuildTarget);
+#else
+				EditorUserBuildSettings.SwitchActiveBuildTarget(BuildTargetGroup.Standalone, recommended_BuildTarget);
+#endif
 			}
 
 			GUILayout.FlexibleSpace();
@@ -207,6 +227,7 @@ public class SteamVR_Settings : EditorWindow
 			GUILayout.EndHorizontal();
 		}
 
+#if (UNITY_5_4 || UNITY_5_3 || UNITY_5_2 || UNITY_5_1 || UNITY_5_0)
 		if (!EditorPrefs.HasKey(ignore + showUnitySplashScreen) &&
 			PlayerSettings.showUnitySplashScreen != recommended_ShowUnitySplashScreen)
 		{
@@ -230,7 +251,31 @@ public class SteamVR_Settings : EditorWindow
 
 			GUILayout.EndHorizontal();
 		}
+#else
+		if (!EditorPrefs.HasKey(ignore + showUnitySplashScreen) &&
+			PlayerSettings.SplashScreen.show != recommended_ShowUnitySplashScreen)
+		{
+			++numItems;
 
+			GUILayout.Label(showUnitySplashScreen + string.Format(currentValue, PlayerSettings.SplashScreen.show));
+
+			GUILayout.BeginHorizontal();
+
+			if (GUILayout.Button(string.Format(useRecommended, recommended_ShowUnitySplashScreen)))
+			{
+				PlayerSettings.SplashScreen.show = recommended_ShowUnitySplashScreen;
+			}
+
+			GUILayout.FlexibleSpace();
+
+			if (GUILayout.Button("Ignore"))
+			{
+				EditorPrefs.SetBool(ignore + showUnitySplashScreen, true);
+			}
+
+			GUILayout.EndHorizontal();
+		}
+#endif
 		if (!EditorPrefs.HasKey(ignore + defaultIsFullScreen) &&
 			PlayerSettings.defaultIsFullScreen != recommended_DefaultIsFullScreen)
 		{
@@ -400,7 +445,7 @@ public class SteamVR_Settings : EditorWindow
 
 			GUILayout.EndHorizontal();
 		}
-
+#if (UNITY_5_4 || UNITY_5_3 || UNITY_5_2 || UNITY_5_1 || UNITY_5_0)
 		if (!EditorPrefs.HasKey(ignore + renderingPath) &&
 			PlayerSettings.renderingPath != recommended_RenderPath)
 		{
@@ -424,7 +469,7 @@ public class SteamVR_Settings : EditorWindow
 
 			GUILayout.EndHorizontal();
 		}
-
+#endif
 		if (!EditorPrefs.HasKey(ignore + colorSpace) &&
 			PlayerSettings.colorSpace != recommended_ColorSpace)
 		{
@@ -514,7 +559,9 @@ public class SteamVR_Settings : EditorWindow
 			EditorPrefs.DeleteKey(ignore + resizableWindow);
 			EditorPrefs.DeleteKey(ignore + fullscreenMode);
 			EditorPrefs.DeleteKey(ignore + visibleInBackground);
+#if (UNITY_5_4 || UNITY_5_3 || UNITY_5_2 || UNITY_5_1 || UNITY_5_0)
 			EditorPrefs.DeleteKey(ignore + renderingPath);
+#endif
 			EditorPrefs.DeleteKey(ignore + colorSpace);
 			EditorPrefs.DeleteKey(ignore + gpuSkinning);
 #if false
@@ -536,9 +583,17 @@ public class SteamVR_Settings : EditorWindow
 			{
 				// Only set those that have not been explicitly ignored.
 				if (!EditorPrefs.HasKey(ignore + buildTarget))
+#if (UNITY_5_5 || UNITY_5_4 || UNITY_5_3 || UNITY_5_2 || UNITY_5_1 || UNITY_5_0)
 					EditorUserBuildSettings.SwitchActiveBuildTarget(recommended_BuildTarget);
+#else
+					EditorUserBuildSettings.SwitchActiveBuildTarget(BuildTargetGroup.Standalone, recommended_BuildTarget);
+#endif
 				if (!EditorPrefs.HasKey(ignore + showUnitySplashScreen))
+#if (UNITY_5_4 || UNITY_5_3 || UNITY_5_2 || UNITY_5_1 || UNITY_5_0)
 					PlayerSettings.showUnitySplashScreen = recommended_ShowUnitySplashScreen;
+#else
+					PlayerSettings.SplashScreen.show = recommended_ShowUnitySplashScreen;
+#endif
 				if (!EditorPrefs.HasKey(ignore + defaultIsFullScreen))
 					PlayerSettings.defaultIsFullScreen = recommended_DefaultIsFullScreen;
 				if (!EditorPrefs.HasKey(ignore + defaultScreenSize))
@@ -556,8 +611,10 @@ public class SteamVR_Settings : EditorWindow
 					PlayerSettings.d3d11FullscreenMode = recommended_FullscreenMode;
 				if (!EditorPrefs.HasKey(ignore + visibleInBackground))
 					PlayerSettings.visibleInBackground = recommended_VisibleInBackground;
+#if (UNITY_5_4 || UNITY_5_3 || UNITY_5_2 || UNITY_5_1 || UNITY_5_0)
 				if (!EditorPrefs.HasKey(ignore + renderingPath))
 					PlayerSettings.renderingPath = recommended_RenderPath;
+#endif
 				if (!EditorPrefs.HasKey(ignore + colorSpace))
 					PlayerSettings.colorSpace = recommended_ColorSpace;
 				if (!EditorPrefs.HasKey(ignore + gpuSkinning))
@@ -579,7 +636,11 @@ public class SteamVR_Settings : EditorWindow
 					// Only ignore those that do not currently match our recommended settings.
 					if (EditorUserBuildSettings.activeBuildTarget != recommended_BuildTarget)
 						EditorPrefs.SetBool(ignore + buildTarget, true);
+#if (UNITY_5_4 || UNITY_5_3 || UNITY_5_2 || UNITY_5_1 || UNITY_5_0)
 					if (PlayerSettings.showUnitySplashScreen != recommended_ShowUnitySplashScreen)
+#else
+					if (PlayerSettings.SplashScreen.show != recommended_ShowUnitySplashScreen)
+#endif
 						EditorPrefs.SetBool(ignore + showUnitySplashScreen, true);
 					if (PlayerSettings.defaultIsFullScreen != recommended_DefaultIsFullScreen)
 						EditorPrefs.SetBool(ignore + defaultIsFullScreen, true);
@@ -596,8 +657,10 @@ public class SteamVR_Settings : EditorWindow
 						EditorPrefs.SetBool(ignore + fullscreenMode, true);
 					if (PlayerSettings.visibleInBackground != recommended_VisibleInBackground)
 						EditorPrefs.SetBool(ignore + visibleInBackground, true);
+#if (UNITY_5_4 || UNITY_5_3 || UNITY_5_2 || UNITY_5_1 || UNITY_5_0)
 					if (PlayerSettings.renderingPath != recommended_RenderPath)
 						EditorPrefs.SetBool(ignore + renderingPath, true);
+#endif
 					if (PlayerSettings.colorSpace != recommended_ColorSpace)
 						EditorPrefs.SetBool(ignore + colorSpace, true);
 					if (PlayerSettings.gpuSkinning != recommended_GpuSkinning)

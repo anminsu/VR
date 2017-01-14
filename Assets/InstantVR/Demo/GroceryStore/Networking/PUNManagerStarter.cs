@@ -13,6 +13,7 @@ public class PUNManagerStarter : MonoBehaviour {
 #if IVR_PHOTON
     public string roomName;
     public string gameVersion;
+    public PhotonLogLevel logLevel = PhotonLogLevel.Informational;
 
     public int sendRate = 25;
 
@@ -21,6 +22,7 @@ public class PUNManagerStarter : MonoBehaviour {
     void Start () {
         PhotonNetwork.sendRate = sendRate;
         PhotonNetwork.sendRateOnSerialize = sendRate;
+        PhotonNetwork.logLevel = logLevel;
         PhotonNetwork.ConnectUsingSettings(gameVersion);
     }
 

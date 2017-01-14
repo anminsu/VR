@@ -16,6 +16,7 @@ public class PlayerManager : Photon.PunBehaviour, IPunObservable {
     public float health = 1f;
     [Tooltip("The local player instance.  Use this to know if the local player is represented in the scene")]
     public static GameObject localPlayerInstance;
+    public GameObject playerUIPrefab;
 
     #endregion
 
@@ -48,6 +49,14 @@ public class PlayerManager : Photon.PunBehaviour, IPunObservable {
     public void Start()
     {
         CameraWork _cameraWork = GetComponent<CameraWork>();
+
+        if (playerUIPrefab != null)
+        {
+            GameObject _uiGo = Instantiate(playerUIPrefab) as GameObject;
+            _uiGo.SendMessage("SetTarget", this, SendMessageOptions.RequireReceiver);
+        } else {
+            Debug.LogError("playerUIPrefab is null", this);
+        }
 
         if (_cameraWork != null)
         {
@@ -107,6 +116,9 @@ public class PlayerManager : Photon.PunBehaviour, IPunObservable {
         {
             transform.position = new Vector3(0f, 5f, 0f);
         }
+
+        GameObject _uiGo = Instantiate(playerUIPrefab) as GameObject;
+        _uiGo.SendMessage("SetTarget", this, SendMessageOptions.RequireReceiver);
     }
 
     #endregion
